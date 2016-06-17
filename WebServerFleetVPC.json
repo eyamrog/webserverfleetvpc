@@ -1,0 +1,406 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "vpc457d7c20": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "172.31.0.0/16",
+        "InstanceTenancy": "default",
+        "EnableDnsSupport": "true",
+        "EnableDnsHostnames": "true"
+      }
+    },
+    "subnet3cb8914b": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "CidrBlock": "172.31.32.0/20",
+        "AvailabilityZone": "us-west-2b",
+        "VpcId": {
+          "Ref": "vpc457d7c20"
+        }
+      }
+    },
+    "subnet21243044": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "CidrBlock": "172.31.16.0/20",
+        "AvailabilityZone": "us-west-2a",
+        "VpcId": {
+          "Ref": "vpc457d7c20"
+        }
+      }
+    },
+    "subnet142d6c4d": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "CidrBlock": "172.31.0.0/20",
+        "AvailabilityZone": "us-west-2c",
+        "VpcId": {
+          "Ref": "vpc457d7c20"
+        }
+      }
+    },
+    "igwc08fa2a5": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+      }
+    },
+    "dopt1d4fe078": {
+      "Type": "AWS::EC2::DHCPOptions",
+      "Properties": {
+        "DomainName": "us-west-2.compute.internal",
+        "DomainNameServers": [
+          "AmazonProvidedDNS"
+        ]
+      }
+    },
+    "aclc00a05a5": {
+      "Type": "AWS::EC2::NetworkAcl",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc457d7c20"
+        }
+      }
+    },
+    "rtb5b24363e": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc457d7c20"
+        }
+      }
+    },
+    "elbELBWebServerFleet": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "Subnets": [
+          {
+            "Ref": "subnet142d6c4d"
+          },
+          {
+            "Ref": "subnet21243044"
+          },
+          {
+            "Ref": "subnet3cb8914b"
+          }
+        ],
+        "HealthCheck": {
+          "HealthyThreshold": "3",
+          "Interval": "10",
+          "Target": "HTTP:80/elbhealthcheck.html",
+          "Timeout": "5",
+          "UnhealthyThreshold": "2"
+        },
+        "ConnectionDrainingPolicy": {
+          "Enabled": "true",
+          "Timeout": "300"
+        },
+        "ConnectionSettings": {
+          "IdleTimeout": "60"
+        },
+        "CrossZone": "true",
+        "SecurityGroups": [
+          {
+            "Ref": "sgSGWebServerFleet"
+          }
+        ],
+        "Listeners": [
+          {
+            "InstancePort": "80",
+            "LoadBalancerPort": "80",
+            "Protocol": "HTTP",
+            "InstanceProtocol": "HTTP",
+            "PolicyNames": [
+              "AWSConsole-LBCookieStickinessPolicy-ELB-WebServerFleet-1464213134597"
+            ]
+          }
+        ],
+        "LBCookieStickinessPolicy": [
+          {
+            "PolicyName": "AWSConsole-LBCookieStickinessPolicy-ELB-WebServerFleet-1464213134597",
+            "CookieExpirationPeriod": "5"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ELB-WebServerFleet"
+          }
+        ]
+      }
+    },
+    "asgASGWebServerFleet": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "AvailabilityZones": [
+          "us-west-2c",
+          "us-west-2b",
+          "us-west-2a"
+        ],
+        "Cooldown": "300",
+        "DesiredCapacity": "3",
+        "HealthCheckGracePeriod": "120",
+        "HealthCheckType": "ELB",
+        "MaxSize": "3",
+        "MinSize": "3",
+        "VPCZoneIdentifier": [
+          {
+            "Ref": "subnet3cb8914b"
+          },
+          {
+            "Ref": "subnet21243044"
+          },
+          {
+            "Ref": "subnet142d6c4d"
+          }
+        ],
+        "LaunchConfigurationName": {
+          "Ref": "lcLCWebServer"
+        },
+        "LoadBalancerNames": [
+          {
+            "Ref": "elbELBWebServerFleet"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ASG-WebServerFleet",
+            "PropagateAtLaunch": true
+          }
+        ],
+        "TerminationPolicies": [
+          "Default"
+        ]
+      }
+    },
+    "lcLCWebServer": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "ImageId": "ami-d0f506b0",
+        "InstanceType": "t2.micro",
+        "KeyName": "AWS20160404AWS",
+        "IamInstanceProfile": "S3-Admin-Access",
+        "SecurityGroups": [
+          {
+            "Ref": "sgSGWebServerFleet"
+          }
+        ],
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/xvda",
+            "Ebs": {
+              "VolumeSize": 8
+            }
+          }
+        ]
+      }
+    },
+    "s3eyamrogbucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "AccessControl": "Private",
+        "VersioningConfiguration": {
+          "Status": "Enabled"
+        }
+      }
+    },
+    "topicSysAdminTeam": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "DisplayName": "SysAdminTeam"
+      }
+    },
+    "sgSGWebServerFleet": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "SG-WebServerFleet",
+        "VpcId": {
+          "Ref": "vpc457d7c20"
+        }
+      }
+    },
+    "snspolicySysAdminTeam": {
+      "Type": "AWS::SNS::TopicPolicy",
+      "Properties": {
+        "Topics": [
+          {
+            "Ref": "topicSysAdminTeam"
+          }
+        ],
+        "PolicyDocument": {
+          "Version": "2008-10-17",
+          "Id": "__default_policy_ID",
+          "Statement": [
+            {
+              "Sid": "__default_statement_ID",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*"
+              },
+              "Action": [
+                "SNS:GetTopicAttributes",
+                "SNS:SetTopicAttributes",
+                "SNS:AddPermission",
+                "SNS:RemovePermission",
+                "SNS:DeleteTopic",
+                "SNS:Subscribe",
+                "SNS:ListSubscriptionsByTopic",
+                "SNS:Publish",
+                "SNS:Receive"
+              ],
+              "Resource": {
+                "Ref": "topicSysAdminTeam"
+              },
+              "Condition": {
+                "StringEquals": {
+                  "AWS:SourceOwner": "803503039604"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "acl1": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "CidrBlock": "0.0.0.0/0",
+        "Egress": "true",
+        "Protocol": "-1",
+        "RuleAction": "allow",
+        "RuleNumber": "100",
+        "NetworkAclId": {
+          "Ref": "aclc00a05a5"
+        }
+      }
+    },
+    "acl2": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "CidrBlock": "0.0.0.0/0",
+        "Protocol": "-1",
+        "RuleAction": "allow",
+        "RuleNumber": "100",
+        "NetworkAclId": {
+          "Ref": "aclc00a05a5"
+        }
+      }
+    },
+    "subnetacl1": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "aclc00a05a5"
+        },
+        "SubnetId": {
+          "Ref": "subnet21243044"
+        }
+      }
+    },
+    "subnetacl2": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "aclc00a05a5"
+        },
+        "SubnetId": {
+          "Ref": "subnet142d6c4d"
+        }
+      }
+    },
+    "subnetacl3": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "aclc00a05a5"
+        },
+        "SubnetId": {
+          "Ref": "subnet3cb8914b"
+        }
+      }
+    },
+    "gw1": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc457d7c20"
+        },
+        "InternetGatewayId": {
+          "Ref": "igwc08fa2a5"
+        }
+      }
+    },
+    "route1": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "RouteTableId": {
+          "Ref": "rtb5b24363e"
+        },
+        "GatewayId": {
+          "Ref": "igwc08fa2a5"
+        }
+      },
+      "DependsOn": "gw1"
+    },
+    "dchpassoc1": {
+      "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc457d7c20"
+        },
+        "DhcpOptionsId": {
+          "Ref": "dopt1d4fe078"
+        }
+      }
+    },
+    "ingress1": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "sgSGWebServerFleet"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": "80",
+        "ToPort": "80",
+        "CidrIp": "0.0.0.0/0"
+      }
+    },
+    "ingress2": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "sgSGWebServerFleet"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": "22",
+        "ToPort": "22",
+        "CidrIp": "0.0.0.0/0"
+      }
+    },
+    "ingress3": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "sgSGWebServerFleet"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": "443",
+        "ToPort": "443",
+        "CidrIp": "0.0.0.0/0"
+      }
+    },
+    "egress1": {
+      "Type": "AWS::EC2::SecurityGroupEgress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "sgSGWebServerFleet"
+        },
+        "IpProtocol": "-1",
+        "CidrIp": "0.0.0.0/0"
+      }
+    }
+  },
+  "Description": "WebServerFleetTemplate"
+}
