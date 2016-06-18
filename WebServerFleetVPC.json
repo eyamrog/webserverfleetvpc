@@ -636,91 +636,61 @@
     "SG": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
-        "GroupDescription": "Enable SSH access and HTTP access on the configured port",
+        "GroupDescription": "Enable SSH access, HTTP and HTTPS access on the configured port",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "443",
+            "ToPort": "443",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "-1",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
         "VpcId": {
           "Ref": "VPC"
         }
-      }
-    },
-    "SGIngress1": {
-      "Type": "AWS::EC2::SecurityGroupIngress",
-      "Properties": {
-        "GroupId": {
-          "Ref": "SG"
-        },
-        "IpProtocol": "tcp",
-        "FromPort": "80",
-        "ToPort": "80",
-        "CidrIp": "0.0.0.0/0"
-      }
-    },
-    "SGIngress2": {
-      "Type": "AWS::EC2::SecurityGroupIngress",
-      "Properties": {
-        "GroupId": {
-          "Ref": "SG"
-        },
-        "IpProtocol": "tcp",
-        "FromPort": "22",
-        "ToPort": "22",
-        "CidrIp": {
-          "Ref": "SSHLocation"
-        }
-      }
-    },
-    "SGIngress3": {
-      "Type": "AWS::EC2::SecurityGroupIngress",
-      "Properties": {
-        "GroupId": {
-          "Ref": "SG"
-        },
-        "IpProtocol": "tcp",
-        "FromPort": "443",
-        "ToPort": "443",
-        "CidrIp": "0.0.0.0/0"
-      }
-    },
-    "SGEgress1": {
-      "Type": "AWS::EC2::SecurityGroupEgress",
-      "Properties": {
-        "GroupId": {
-          "Ref": "SG"
-        },
-        "IpProtocol": "-1",
-        "CidrIp": "0.0.0.0/0"
       }
     },
     "ELBSG": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "GroupDescription": "Enable HTTP access on port 80",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
         "VpcId": {
           "Ref": "VPC"
         }
-      }
-    },
-    "ELBSGIngress1": {
-      "Type": "AWS::EC2::SecurityGroupIngress",
-      "Properties": {
-        "GroupId": {
-          "Ref": "ELBSG"
-        },
-        "IpProtocol": "tcp",
-        "FromPort": "80",
-        "ToPort": "80",
-        "CidrIp": "0.0.0.0/0"
-      }
-    },
-    "ELBSGEgress1": {
-      "Type": "AWS::EC2::SecurityGroupEgress",
-      "Properties": {
-        "GroupId": {
-          "Ref": "ELBSG"
-        },
-        "IpProtocol": "tcp",
-        "FromPort": "80",
-        "ToPort": "80",
-        "CidrIp": "0.0.0.0/0"
       }
     },
     "InstanceProfileWebServer": {
@@ -774,7 +744,7 @@
     },
     "ELB": {
       "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
-      "DependsOn": "SG",
+      "DependsOn": "ELBSG",
       "Properties": {
         "Subnets": [
           {
@@ -804,7 +774,7 @@
         "CrossZone": "true",
         "SecurityGroups": [
           {
-            "Ref": "SG"
+            "Ref": "ELBSG"
           }
         ],
         "Listeners": [
