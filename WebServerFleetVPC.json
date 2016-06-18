@@ -889,6 +889,7 @@
       "Type": "AWS::AutoScaling::LaunchConfiguration",
       "DependsOn": "SG",
       "Properties": {
+        "AssociatePublicIpAddress": true,
         "ImageId": {
         "Fn::FindInMap": [
           "AWSRegionArch2AMI",
