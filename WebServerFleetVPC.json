@@ -513,6 +513,10 @@
     },
     "VPCGwAttach1": {
       "Type": "AWS::EC2::VPCGatewayAttachment",
+      "DependsOn": [
+        "VPC",
+        "IGw"
+      ],
       "Properties": {
         "VpcId": {
           "Ref": "VPC"
