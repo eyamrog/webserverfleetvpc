@@ -532,6 +532,7 @@
     },
     "RTBRoute1": {
       "Type": "AWS::EC2::Route",
+      "DependsOn": "VPCGwAttach1",
       "Properties": {
         "DestinationCidrBlock": "0.0.0.0/0",
         "RouteTableId": {
@@ -540,8 +541,7 @@
         "GatewayId": {
           "Ref": "IGw"
         }
-      },
-      "DependsOn": "VPCGwAttach1"
+      }
     },
     "DHCPOptions": {
       "Type": "AWS::EC2::DHCPOptions",
@@ -659,7 +659,9 @@
         "IpProtocol": "tcp",
         "FromPort": "22",
         "ToPort": "22",
-        "CidrIp": "0.0.0.0/0"
+        "CidrIp": {
+          "Ref": "SSHLocation"
+        }
       }
     },
     "SGIngress3": {
@@ -735,6 +737,7 @@
     },
     "ELB": {
       "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "DependsOn": "SG",
       "Properties": {
         "Subnets": [
           {
@@ -794,6 +797,7 @@
     },
     "ASG": {
       "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "DependsOn": "LCWebServer",
       "Properties": {
         "AvailabilityZones": {
           "Fn::GetAZs": ""
@@ -837,6 +841,7 @@
     },
     "LCWebServer": {
       "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "DependsOn": "SG",
       "Properties": {
         "ImageId": {
         "Fn::FindInMap": [
@@ -896,6 +901,25 @@
             ]
           }
         }
+      }
+    }
+  },
+  "Outputs": {
+    "URL": {
+      "Description": "URL of the Web Server Fleet",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "http://",
+            {
+              "Fn::GetAtt": [
+                "ELB",
+                "DNSName"
+              ]
+            }
+          ]
+        ]
       }
     }
   }
