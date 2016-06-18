@@ -744,7 +744,10 @@
     },
     "ELB": {
       "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
-      "DependsOn": "ELBSG",
+      "DependsOn": [
+        "ELBSG",
+        "VPCGwAttach1"
+      ],
       "Properties": {
         "Subnets": [
           {
@@ -804,7 +807,10 @@
     },
     "ASG": {
       "Type": "AWS::AutoScaling::AutoScalingGroup",
-      "DependsOn": "LCWebServer",
+      "DependsOn": [
+        "LCWebServer",
+        "VPCGwAttach1"
+      ],
       "Properties": {
         "AvailabilityZones": {
           "Fn::GetAZs": ""
