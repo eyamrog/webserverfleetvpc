@@ -547,6 +547,39 @@
         }
       }
     },
+    "PublicSubnetRouteTableAssociationA": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "SubnetA"
+        },
+        "RouteTableId": {
+          "Ref": "RTB"
+        }
+      }
+    },
+    "PublicSubnetRouteTableAssociationB": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "SubnetB"
+        },
+        "RouteTableId": {
+          "Ref": "RTB"
+        }
+      }
+    },
+    "PublicSubnetRouteTableAssociationC": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "SubnetC"
+        },
+        "RouteTableId": {
+          "Ref": "RTB"
+        }
+      }
+    },
     "DHCPOptions": {
       "Type": "AWS::EC2::DHCPOptions",
       "Properties": {
