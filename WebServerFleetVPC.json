@@ -689,43 +689,24 @@
     "SecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
-        "GroupDescription": "Enable SSH access",
+        "GroupDescription": "Enable SSH and HTTP access",
         "SecurityGroupIngress": [
           {
             "IpProtocol": "tcp",
             "FromPort": "22",
             "ToPort": "22",
             "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
           }
         ],
         "SecurityGroupEgress": [
           {
             "IpProtocol": "-1",
-            "CidrIp": "0.0.0.0/0"
-          }
-        ],
-        "VpcId": {
-          "Ref": "VirtualPrivateCloud"
-        }
-      }
-    },
-    "SecurityGroupElasticLoadBalancer": {
-      "Type": "AWS::EC2::SecurityGroup",
-      "Properties": {
-        "GroupDescription": "Enable HTTP access",
-        "SecurityGroupIngress": [
-          {
-            "IpProtocol": "tcp",
-            "FromPort": "80",
-            "ToPort": "80",
-            "CidrIp": "0.0.0.0/0"
-          }
-        ],
-        "SecurityGroupEgress": [
-          {
-            "IpProtocol": "tcp",
-            "FromPort": "80",
-            "ToPort": "80",
             "CidrIp": "0.0.0.0/0"
           }
         ],
@@ -766,7 +747,7 @@
         "CrossZone": "true",
         "SecurityGroups": [
           {
-            "Ref": "SecurityGroupElasticLoadBalancer"
+            "Ref": "SecurityGroup"
           }
         ],
         "Listeners": [
