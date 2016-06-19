@@ -461,17 +461,17 @@
     }
   },
   "Resources": {
-    "VPC": {
+    "VirtualPrivateCloud": {
       "Type": "AWS::EC2::VPC",
       "Properties": {
         "CidrBlock": "10.0.0.0/16",
         "InstanceTenancy": "default",
         "EnableDnsSupport": "true",
-        "EnableDnsHostnames": "true",
+        "EnableDnsHostnames": "false",
         "Tags": [
           {
             "Key": "Name",
-            "Value": "VPC-WebServerFleet"
+            "Value": "Virtual Private Cloud"
           }
         ]
       }
@@ -482,8 +482,14 @@
         "CidrBlock": "10.0.1.0/24",
         "AvailabilityZone": "us-west-2a",
         "VpcId": {
-          "Ref": "VPC"
-        }
+          "Ref": "VirtualPrivateCloud"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Subnet A"
+          }
+        ]
       }
     },
     "SubnetB": {
@@ -492,8 +498,14 @@
         "CidrBlock": "10.0.2.0/24",
         "AvailabilityZone": "us-west-2b",
         "VpcId": {
-          "Ref": "VPC"
-        }
+          "Ref": "VirtualPrivateCloud"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Subnet B"
+          }
+        ]
       }
     },
     "SubnetC": {
@@ -502,48 +514,56 @@
         "CidrBlock": "10.0.3.0/24",
         "AvailabilityZone": "us-west-2c",
         "VpcId": {
-          "Ref": "VPC"
-        }
+          "Ref": "VirtualPrivateCloud"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Subnet C"
+          }
+        ]
       }
     },
-    "IGw": {
+    "InternetGateway": {
       "Type": "AWS::EC2::InternetGateway",
       "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Internet Gateway"
+          }
+        ]
       }
     },
     "VPCGwAttach1": {
       "Type": "AWS::EC2::VPCGatewayAttachment",
-      "DependsOn": [
-        "VPC",
-        "IGw"
-      ],
       "Properties": {
         "VpcId": {
-          "Ref": "VPC"
+          "Ref": "VirtualPrivateCloud"
         },
         "InternetGatewayId": {
-          "Ref": "IGw"
+          "Ref": "InternetGateway"
         }
       }
     },
-    "RTB": {
+    "RouteTable1": {
       "Type": "AWS::EC2::RouteTable",
       "Properties": {
         "VpcId": {
-          "Ref": "VPC"
+          "Ref": "VirtualPrivateCloud"
         }
       }
     },
-    "RTBRoute1": {
+    "Route1": {
       "Type": "AWS::EC2::Route",
       "DependsOn": "VPCGwAttach1",
       "Properties": {
         "DestinationCidrBlock": "0.0.0.0/0",
         "RouteTableId": {
-          "Ref": "RTB"
+          "Ref": "RouteTable1"
         },
         "GatewayId": {
-          "Ref": "IGw"
+          "Ref": "InternetGateway"
         }
       }
     },
@@ -554,7 +574,7 @@
           "Ref": "SubnetA"
         },
         "RouteTableId": {
-          "Ref": "RTB"
+          "Ref": "RouteTable1"
         }
       }
     },
@@ -565,7 +585,7 @@
           "Ref": "SubnetB"
         },
         "RouteTableId": {
-          "Ref": "RTB"
+          "Ref": "RouteTable1"
         }
       }
     },
@@ -576,7 +596,7 @@
           "Ref": "SubnetC"
         },
         "RouteTableId": {
-          "Ref": "RTB"
+          "Ref": "RouteTable1"
         }
       }
     },
@@ -589,26 +609,26 @@
         ]
       }
     },
-    "DHCPOptionsAssoc1": {
+    "DHCPAssoc1": {
       "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
       "Properties": {
         "VpcId": {
-          "Ref": "VPC"
+          "Ref": "VirtualPrivateCloud"
         },
         "DhcpOptionsId": {
           "Ref": "DHCPOptions"
         }
       }
     },
-    "NACL": {
+    "NetworkACL": {
       "Type": "AWS::EC2::NetworkAcl",
       "Properties": {
         "VpcId": {
-          "Ref": "VPC"
+          "Ref": "VirtualPrivateCloud"
         }
       }
     },
-    "NACLEntry1": {
+    "ACL1": {
       "Type": "AWS::EC2::NetworkAclEntry",
       "Properties": {
         "CidrBlock": "0.0.0.0/0",
@@ -617,11 +637,11 @@
         "RuleAction": "allow",
         "RuleNumber": "100",
         "NetworkAclId": {
-          "Ref": "NACL"
+          "Ref": "NetworkACL"
         }
       }
     },
-    "NACLEntry2": {
+    "ACL2": {
       "Type": "AWS::EC2::NetworkAclEntry",
       "Properties": {
         "CidrBlock": "0.0.0.0/0",
@@ -629,7 +649,7 @@
         "RuleAction": "allow",
         "RuleNumber": "100",
         "NetworkAclId": {
-          "Ref": "NACL"
+          "Ref": "NetworkACL"
         }
       }
     },
@@ -637,7 +657,7 @@
       "Type": "AWS::EC2::SubnetNetworkAclAssociation",
       "Properties": {
         "NetworkAclId": {
-          "Ref": "NACL"
+          "Ref": "NetworkACL"
         },
         "SubnetId": {
           "Ref": "SubnetA"
@@ -648,7 +668,7 @@
       "Type": "AWS::EC2::SubnetNetworkAclAssociation",
       "Properties": {
         "NetworkAclId": {
-          "Ref": "NACL"
+          "Ref": "NetworkACL"
         },
         "SubnetId": {
           "Ref": "SubnetB"
@@ -659,34 +679,22 @@
       "Type": "AWS::EC2::SubnetNetworkAclAssociation",
       "Properties": {
         "NetworkAclId": {
-          "Ref": "NACL"
+          "Ref": "NetworkACL"
         },
         "SubnetId": {
           "Ref": "SubnetC"
         }
       }
     },
-    "SG": {
+    "SecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
-        "GroupDescription": "Enable SSH access, HTTP and HTTPS access on the configured port",
+        "GroupDescription": "Enable SSH access",
         "SecurityGroupIngress": [
           {
             "IpProtocol": "tcp",
             "FromPort": "22",
             "ToPort": "22",
-            "CidrIp": "0.0.0.0/0"
-          },
-          {
-            "IpProtocol": "tcp",
-            "FromPort": "80",
-            "ToPort": "80",
-            "CidrIp": "0.0.0.0/0"
-          },
-          {
-            "IpProtocol": "tcp",
-            "FromPort": "443",
-            "ToPort": "443",
             "CidrIp": "0.0.0.0/0"
           }
         ],
@@ -697,14 +705,14 @@
           }
         ],
         "VpcId": {
-          "Ref": "VPC"
+          "Ref": "VirtualPrivateCloud"
         }
       }
     },
-    "ELBSG": {
+    "SecurityGroupElasticLoadBalancer": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
-        "GroupDescription": "Enable HTTP access on port 80",
+        "GroupDescription": "Enable HTTP access",
         "SecurityGroupIngress": [
           {
             "IpProtocol": "tcp",
@@ -722,8 +730,111 @@
           }
         ],
         "VpcId": {
-          "Ref": "VPC"
+          "Ref": "VirtualPrivateCloud"
         }
+      }
+    },
+    "ElasticLoadBalancer": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "DependsOn": "VPCGwAttach1",
+      "Properties": {
+        "Subnets": [
+          {
+            "Ref": "SubnetB"
+          },
+          {
+            "Ref": "SubnetA"
+          },
+          {
+            "Ref": "SubnetC"
+          }
+        ],
+        "HealthCheck": {
+          "HealthyThreshold": "3",
+          "Interval": "10",
+          "Target": "HTTP:80/elbhealthcheck.html",
+          "Timeout": "5",
+          "UnhealthyThreshold": "2"
+        },
+        "ConnectionDrainingPolicy": {
+          "Enabled": "true",
+          "Timeout": "300"
+        },
+        "ConnectionSettings": {
+          "IdleTimeout": "60"
+        },
+        "CrossZone": "true",
+        "SecurityGroups": [
+          {
+            "Ref": "SecurityGroupElasticLoadBalancer"
+          }
+        ],
+        "Listeners": [
+          {
+            "InstancePort": "80",
+            "LoadBalancerPort": "80",
+            "Protocol": "HTTP",
+            "InstanceProtocol": "HTTP",
+            "PolicyNames": [
+              "AWSConsole-LBCookieStickinessPolicy-ELB"
+            ]
+          }
+        ],
+        "LBCookieStickinessPolicy": [
+          {
+            "PolicyName": "AWSConsole-LBCookieStickinessPolicy-ELB",
+            "CookieExpirationPeriod": "5"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ELB-WebServerFleet"
+          }
+        ]
+      }
+    },
+    "AutoScalingGroup": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "AvailabilityZones": {
+          "Fn::GetAZs": ""
+        },
+        "Cooldown": "300",
+        "DesiredCapacity": "3",
+        "HealthCheckGracePeriod": "300",
+        "HealthCheckType": "ELB",
+        "MaxSize": "3",
+        "MinSize": "3",
+        "VPCZoneIdentifier": [
+          {
+            "Ref": "SubnetA"
+          },
+          {
+            "Ref": "SubnetB"
+          },
+          {
+            "Ref": "SubnetC"
+          }
+        ],
+        "LaunchConfigurationName": {
+          "Ref": "LaunchConfigurationWebServer"
+        },
+        "LoadBalancerNames": [
+          {
+            "Ref": "ElasticLoadBalancer"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ASG-WebServerFleet",
+            "PropagateAtLaunch": true
+          }
+        ],
+        "TerminationPolicies": [
+          "Default"
+        ]
       }
     },
     "InstanceProfileWebServer": {
@@ -775,119 +886,9 @@
         ]
       }
     },
-    "ELB": {
-      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
-      "DependsOn": [
-        "ELBSG",
-        "VPCGwAttach1"
-      ],
-      "Properties": {
-        "Subnets": [
-          {
-            "Ref": "SubnetA"
-          },
-          {
-            "Ref": "SubnetB"
-          },
-          {
-            "Ref": "SubnetC"
-          }
-        ],
-        "HealthCheck": {
-          "HealthyThreshold": "3",
-          "Interval": "10",
-          "Target": "HTTP:80/elbhealthcheck.html",
-          "Timeout": "5",
-          "UnhealthyThreshold": "2"
-        },
-        "ConnectionDrainingPolicy": {
-          "Enabled": "true",
-          "Timeout": "300"
-        },
-        "ConnectionSettings": {
-          "IdleTimeout": "60"
-        },
-        "CrossZone": "true",
-        "SecurityGroups": [
-          {
-            "Ref": "ELBSG"
-          }
-        ],
-        "Listeners": [
-          {
-            "InstancePort": "80",
-            "LoadBalancerPort": "80",
-            "Protocol": "HTTP",
-            "InstanceProtocol": "HTTP",
-            "PolicyNames": [
-              "AWSConsole-LBCookieStickinessPolicy-ELB-WebServerFleet"
-            ]
-          }
-        ],
-        "LBCookieStickinessPolicy": [
-          {
-            "PolicyName": "AWSConsole-LBCookieStickinessPolicy-ELB-WebServerFleet",
-            "CookieExpirationPeriod": "5"
-          }
-        ],
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "ELB-WebServerFleet"
-          }
-        ]
-      }
-    },
-    "ASG": {
-      "Type": "AWS::AutoScaling::AutoScalingGroup",
-      "DependsOn": [
-        "LCWebServer",
-        "VPCGwAttach1"
-      ],
-      "Properties": {
-        "AvailabilityZones": {
-          "Fn::GetAZs": ""
-        },
-        "Cooldown": "300",
-        "DesiredCapacity": "3",
-        "HealthCheckGracePeriod": "120",
-        "HealthCheckType": "ELB",
-        "MaxSize": "3",
-        "MinSize": "3",
-        "VPCZoneIdentifier": [
-          {
-            "Ref": "SubnetA"
-          },
-          {
-            "Ref": "SubnetB"
-          },
-          {
-            "Ref": "SubnetC"
-          }
-        ],
-        "LaunchConfigurationName": {
-          "Ref": "LCWebServer"
-        },
-        "LoadBalancerNames": [
-          {
-            "Ref": "ELB"
-          }
-        ],
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "ASG-WebServerFleet",
-            "PropagateAtLaunch": true
-          }
-        ],
-        "TerminationPolicies": [
-          "Default"
-        ]
-      }
-    },
-    "LCWebServer": {
+    "LaunchConfigurationWebServer": {
       "Type": "AWS::AutoScaling::LaunchConfiguration",
-      "DependsOn": "SG",
+      "DependsOn": "VPCGwAttach1",
       "Properties": {
         "AssociatePublicIpAddress": true,
         "ImageId": {
@@ -918,7 +919,7 @@
         },
         "SecurityGroups": [
           {
-            "Ref": "SG"
+            "Ref": "SecurityGroup"
           }
         ],
         "BlockDeviceMappings": [
@@ -961,7 +962,7 @@
             "http://",
             {
               "Fn::GetAtt": [
-                "ELB",
+                "ElasticLoadBalancer",
                 "DNSName"
               ]
             }
