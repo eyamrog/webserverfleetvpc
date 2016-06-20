@@ -866,7 +866,7 @@
           ]
         }
       }
-    }, 
+    },
     "AMIInfoFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
@@ -895,7 +895,7 @@
         "Runtime": "nodejs",
         "Timeout": "30"
       }
-    }, 
+    },
     "LambdaExecutionRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
@@ -943,7 +943,7 @@
           }
         ]
       }
-    },    
+    },
     "LaunchConfigurationWebServer": {
       "Type": "AWS::AutoScaling::LaunchConfiguration",
       "DependsOn": "VPCGwAttach1",
