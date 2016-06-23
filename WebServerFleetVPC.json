@@ -689,7 +689,13 @@
         ],
         "VpcId": {
           "Ref": "VirtualPrivateCloud"
-        }
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "SG-WebServerFleet"
+          }
+        ]
       }
     },
     "ElasticLoadBalancer": {
@@ -698,10 +704,10 @@
       "Properties": {
         "Subnets": [
           {
-            "Ref": "SubnetB"
+            "Ref": "SubnetA"
           },
           {
-            "Ref": "SubnetA"
+            "Ref": "SubnetB"
           },
           {
             "Ref": "SubnetC"
@@ -1027,6 +1033,12 @@
             }
           ]
         ]
+      }
+    },
+    "Region": {
+      "Description": "AWS Region",
+      "Value": {
+        "Ref": "AWS::Region"
       }
     },
     "AMIID" : {
