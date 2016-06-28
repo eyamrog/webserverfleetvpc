@@ -1,0 +1,76 @@
+0. Open "01-RLAM_SL_Amazon_Web_Services_What_makes_them_so_appealing-Commands-RevB.txt"
+   Open "01-RLAM_SL_Amazon_Web_Services_What_makes_them_so_appealing-Pres-RevA.pptx" - Set it to Slide about Scalability
+   Setup e-mail "AWS Demo: Public_Name_ELB-WebServerFleet" to yourself
+   Open AWS Console in iPad Safari - Set it to Elastic Load Balancing and Monitor Instances Tab
+
+
+1. AWS Management Console (Use Chrome; Tab1: AWS Console; Tab2: AWS website; Tab3: Google)
+ - Tab2: AWS Global Infrastructure - List of offerings at all AWS locations;
+ - Tab2: Google AWS Regions and Availability Zones;
+ - Tab2: Google AWS S3: Highlight 11 9s Durability; 99,99% Availability and; Designed to sustain the concurrent loss of data in two facilities;
+ - Tab1: Walkthrough Region Selection; IAM Groups Users Roles; S3 Buckets - Upload Demo files
+ - Tab1: Walkthrough EC2: Instances; Elastic Load Balancing; Auto Scaling Groups
+
+
+2. SG-WebServerFleet
+ - Open ports (SSH-22, HTTP-80, HTTPS-443)
+
+
+3. ELB-WebServerFleet
+ - Configure Health Check - Ping Path: /elbhealthcheck.html
+
+Content of /var/www/html/elbhealthcheck.html
+I am alive!
+
+
+ - Health Check Interval: 10 seconds
+ - Healthy Threshold: 3 seconds
+So, 20 seconds to failing instance to get out of ELB and 30 seconds to a new instance to get in the ELB
+
+ - Copy Public_Name_ELB-WebServerFleet to the Laptop Chrome Browser Tab and to Chat window, e-mail it to yourself, Open it in iPad Safari
+ - Stickiness: LBCookieStickinessPolicy, expirationPeriod='5'
+
+
+4. LC-WebServer
+ - IAM role: S3-Admin-Access
+ - Bootstrap configuration script
+
+#!/bin/bash
+yum -y update
+yum install -y httpd
+aws s3 cp s3://eyamrog-demo-20160427-1/index.html /var/www/html/
+aws s3 cp s3://eyamrog-demo-20160427-1/elbhealthcheck.html /var/www/html/
+aws s3 cp s3://eyamrog-demo-20160427-1/RLAM_SL_AWS-PictureA.jpg /var/www/html/
+chown -R apache.apache /var/www/html/
+chmod -R 755 /var/www/html/
+chkconfig httpd on
+service httpd start
+
+Content of /var/www/html/index.html
+<html>
+
+<body bgcolor="ffffff">
+
+<h1>Hello! This is Server A!</h1>
+
+<hr>
+
+<img src="RLAM_SL_AWS-PictureA.jpg">
+
+<hr>
+
+</body>
+
+</html>
+
+
+
+5. ASG-WebServerFleet
+ - Load Balancing: Receive traffic from Elastic Load Balancer(s)
+
+ - Health Check Type: ELB
+ - Health Check Grace Period: 120 seconds
+
+
+Hit F5 repeatedly and verify the proper operation of the Elastic Load Balancer
+Open <Public_Name_ELB-WebServerFleet>/RLAM_SL_AWS-PictureA.jpg
