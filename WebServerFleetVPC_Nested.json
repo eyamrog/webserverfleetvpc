@@ -4,7 +4,7 @@
   "Parameters": {
     "WebServerS3BucketName": {
       "Description": "The name of the existing S3 bucket where you stored the Web Server files",
-      "Type": "String"
+      "Type": "String",
       "Default": "eyamrog-demo-20160427-1",
       "AllowedPattern": "[-.a-z0-9]*",
       "ConstraintDescription": "Bucket names can contain lowercase letters, numbers, hyphens and periods (.)"
