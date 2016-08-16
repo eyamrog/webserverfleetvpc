@@ -1,0 +1,666 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Web Server Fleet in a VPC in AWS",
+  "Parameters": {
+    "WebServerS3BucketName": {
+      "Description": "The name of the existing S3 bucket where you stored the Web Server files",
+      "Type": "String"
+      "Default": "eyamrog-demo-20160427-1",
+      "AllowedPattern": "[-.a-z0-9]*",
+      "ConstraintDescription": "Bucket names can contain lowercase letters, numbers, hyphens and periods (.)"
+    },
+    "WebServerInstanceType": {
+      "Description": "Web Server EC2 instance type",
+      "Type": "String",
+      "Default": "t2.micro",
+      "AllowedValues": [
+        "t1.micro",
+        "t2.nano",
+        "t2.micro",
+        "t2.small",
+        "t2.medium",
+        "t2.large",
+        "m1.small",
+        "m1.medium",
+        "m1.large",
+        "m1.xlarge",
+        "m2.xlarge",
+        "m2.2xlarge",
+        "m2.4xlarge",
+        "m3.medium",
+        "m3.large",
+        "m3.xlarge",
+        "m3.2xlarge",
+        "m4.large",
+        "m4.xlarge",
+        "m4.2xlarge",
+        "m4.4xlarge",
+        "m4.10xlarge",
+        "c1.medium",
+        "c1.xlarge",
+        "c3.large",
+        "c3.xlarge",
+        "c3.2xlarge",
+        "c3.4xlarge",
+        "c3.8xlarge",
+        "c4.large",
+        "c4.xlarge",
+        "c4.2xlarge",
+        "c4.4xlarge",
+        "c4.8xlarge",
+        "g2.2xlarge",
+        "g2.8xlarge",
+        "r3.large",
+        "r3.xlarge",
+        "r3.2xlarge",
+        "r3.4xlarge",
+        "r3.8xlarge",
+        "i2.xlarge",
+        "i2.2xlarge",
+        "i2.4xlarge",
+        "i2.8xlarge",
+        "d2.xlarge",
+        "d2.2xlarge",
+        "d2.4xlarge",
+        "d2.8xlarge",
+        "hi1.4xlarge",
+        "hs1.8xlarge",
+        "cr1.8xlarge",
+        "cc2.8xlarge",
+        "cg1.4xlarge"
+      ],
+      "ConstraintDescription": "Must be a valid EC2 instance type."
+    },
+    "WebServerKeyName": {
+      "Description": "Name of an existing EC2 KeyPair to enable SSH access to the Bastion instance",
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "ConstraintDescription": "Must be the name of an existing EC2 KeyPair."
+    },
+    "WebServerSSHLocation": {
+      "Description": "The IP address range that can be used to SSH to the Bastion host",
+      "Type": "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "Default": "0.0.0.0/0",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+    "BastionS3BucketName": {
+      "Description": "The name of the existing S3 bucket where you stored the Bastion host files",
+      "Type": "String",
+      "Default": "eyamrog-demo-20160427-1",
+      "AllowedPattern": "[-.a-z0-9]*",
+      "ConstraintDescription": "Bucket names can contain lowercase letters, numbers, hyphens and periods (.)"
+    },
+    "BastionInstanceType": {
+      "Description": "Bastion host EC2 instance type",
+      "Type": "String",
+      "Default": "t2.micro",
+      "AllowedValues": [
+        "t1.micro",
+        "t2.nano",
+        "t2.micro",
+        "t2.small",
+        "t2.medium",
+        "t2.large",
+        "m1.small",
+        "m1.medium",
+        "m1.large",
+        "m1.xlarge",
+        "m2.xlarge",
+        "m2.2xlarge",
+        "m2.4xlarge",
+        "m3.medium",
+        "m3.large",
+        "m3.xlarge",
+        "m3.2xlarge",
+        "m4.large",
+        "m4.xlarge",
+        "m4.2xlarge",
+        "m4.4xlarge",
+        "m4.10xlarge",
+        "c1.medium",
+        "c1.xlarge",
+        "c3.large",
+        "c3.xlarge",
+        "c3.2xlarge",
+        "c3.4xlarge",
+        "c3.8xlarge",
+        "c4.large",
+        "c4.xlarge",
+        "c4.2xlarge",
+        "c4.4xlarge",
+        "c4.8xlarge",
+        "g2.2xlarge",
+        "g2.8xlarge",
+        "r3.large",
+        "r3.xlarge",
+        "r3.2xlarge",
+        "r3.4xlarge",
+        "r3.8xlarge",
+        "i2.xlarge",
+        "i2.2xlarge",
+        "i2.4xlarge",
+        "i2.8xlarge",
+        "d2.xlarge",
+        "d2.2xlarge",
+        "d2.4xlarge",
+        "d2.8xlarge",
+        "hi1.4xlarge",
+        "hs1.8xlarge",
+        "cr1.8xlarge",
+        "cc2.8xlarge",
+        "cg1.4xlarge"
+      ],
+      "ConstraintDescription": "Must be a valid EC2 instance type."
+    },
+    "BastionKeyName": {
+      "Description": "Name of an existing EC2 KeyPair to enable SSH access to the Bastion instance",
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "ConstraintDescription": "Must be the name of an existing EC2 KeyPair."
+    },
+    "BastionSSHLocation": {
+      "Description": "The IP address range that can be used to SSH to the Bastion host",
+      "Type": "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "Default": "0.0.0.0/0",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+    "NATS3BucketName": {
+      "Description": "The name of the existing S3 bucket where you stored the NAT host files",
+      "Type": "String",
+      "Default": "eyamrog-demo-20160427-1",
+      "AllowedPattern": "[-.a-z0-9]*",
+      "ConstraintDescription": "Bucket names can contain lowercase letters, numbers, hyphens and periods (.)"
+    },
+    "NATInstanceType": {
+      "Description": "NAT host EC2 instance type",
+      "Type": "String",
+      "Default": "t2.micro",
+      "AllowedValues": [
+        "t1.micro",
+        "t2.nano",
+        "t2.micro",
+        "t2.small",
+        "t2.medium",
+        "t2.large",
+        "m1.small",
+        "m1.medium",
+        "m1.large",
+        "m1.xlarge",
+        "m2.xlarge",
+        "m2.2xlarge",
+        "m2.4xlarge",
+        "m3.medium",
+        "m3.large",
+        "m3.xlarge",
+        "m3.2xlarge",
+        "m4.large",
+        "m4.xlarge",
+        "m4.2xlarge",
+        "m4.4xlarge",
+        "m4.10xlarge",
+        "c1.medium",
+        "c1.xlarge",
+        "c3.large",
+        "c3.xlarge",
+        "c3.2xlarge",
+        "c3.4xlarge",
+        "c3.8xlarge",
+        "c4.large",
+        "c4.xlarge",
+        "c4.2xlarge",
+        "c4.4xlarge",
+        "c4.8xlarge",
+        "g2.2xlarge",
+        "g2.8xlarge",
+        "r3.large",
+        "r3.xlarge",
+        "r3.2xlarge",
+        "r3.4xlarge",
+        "r3.8xlarge",
+        "i2.xlarge",
+        "i2.2xlarge",
+        "i2.4xlarge",
+        "i2.8xlarge",
+        "d2.xlarge",
+        "d2.2xlarge",
+        "d2.4xlarge",
+        "d2.8xlarge",
+        "hi1.4xlarge",
+        "hs1.8xlarge",
+        "cr1.8xlarge",
+        "cc2.8xlarge",
+        "cg1.4xlarge"
+      ],
+      "ConstraintDescription": "Must be a valid EC2 instance type."
+    },
+    "NATKeyName": {
+      "Description": "Name of an existing EC2 KeyPair to enable SSH access to the NAT instance",
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "ConstraintDescription": "Must be the name of an existing EC2 KeyPair."
+    }
+  },
+  "Resources": {
+    "VPCStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": "https://s3-us-west-2.amazonaws.com/eyamrog-demo-20160427-1/GenericVPC_Nested.json"
+      }
+    },
+    "BastionStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "DependsOn": "VPCStack",
+      "Properties": {
+        "TemplateURL": "https://s3-us-west-2.amazonaws.com/eyamrog-demo-20160427-1/GenericBastion_Nested.json",
+        "Parameters": {
+          "BastionS3BucketName": {
+            "Ref": "BastionS3BucketName"
+          },
+          "BastionInstanceType": {
+            "Ref": "BastionInstanceType"
+          },
+          "BastionKeyName": {
+            "Ref": "BastionKeyName"
+          },
+          "BastionSSHLocation": {
+             "Ref": "BastionSSHLocation"
+          },
+          "VirtualPrivateCloud": {
+            "Fn::GetAtt": [
+              "VPCStack",
+              "Outputs.VirtualPrivateCloud"
+            ]
+          },
+          "BastionSubnet": {
+            "Fn::GetAtt": [
+              "VPCStack",
+              "Outputs.PublicSubnetA"
+            ]
+          }
+        }
+      }
+    },
+    "NATStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "DependsOn": "VPCStack",
+      "Properties": {
+        "TemplateURL": "https://s3-us-west-2.amazonaws.com/eyamrog-demo-20160427-1/GenericNAT_Nested.json",
+        "Parameters": {
+          "NATS3BucketName": {
+            "Ref": "NATS3BucketName"
+          },
+          "NATInstanceType": {
+            "Ref": "NATInstanceType"
+          },
+          "NATKeyName": {
+            "Ref": "NATKeyName"
+          },
+          "VirtualPrivateCloud": {
+            "Fn::GetAtt": [
+              "VPCStack",
+              "Outputs.VirtualPrivateCloud"
+            ]
+          },
+          "NATSubnet": {
+            "Fn::GetAtt": [
+              "VPCStack",
+              "Outputs.PublicSubnetA"
+            ]
+          },
+          "CidrBlock": {
+            "Fn::GetAtt": [
+              "VPCStack",
+              "Outputs.CidrBlock"
+            ]
+          },
+          "PrivateRouteTable1": {
+            "Fn::GetAtt": [
+              "VPCStack",
+              "Outputs.PrivateRouteTable1"
+            ]
+          }
+        }
+      }
+    },
+    "SecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enable SSH and HTTP access",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+            "CidrIp": {
+              "Ref": "WebServerSSHLocation"
+            }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "-1",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "VpcId": {
+          "Fn::GetAtt": [
+            "VPCStack",
+            "Outputs.VirtualPrivateCloud"
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "SG-WebServerFleet"
+          }
+        ]
+      }
+    },
+    "ElasticLoadBalancer": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "DependsOn": "VPCStack",
+      "Properties": {
+        "Subnets": [
+          {
+            "Fn::GetAtt": [
+              "VPCStack",
+              "Outputs.PublicSubnetA"
+            ]
+          },
+          {
+            "Fn::GetAtt": [
+              "VPCStack",
+              "Outputs.PublicSubnetB"
+            ]
+          },
+          {
+            "Fn::GetAtt": [
+              "VPCStack",
+              "Outputs.PublicSubnetC"
+            ]
+          }
+        ],
+        "HealthCheck": {
+          "HealthyThreshold": "3",
+          "Interval": "10",
+          "Target": "HTTP:80/elbhealthcheck.html",
+          "Timeout": "5",
+          "UnhealthyThreshold": "2"
+        },
+        "ConnectionDrainingPolicy": {
+          "Enabled": "true",
+          "Timeout": "300"
+        },
+        "ConnectionSettings": {
+          "IdleTimeout": "60"
+        },
+        "CrossZone": "true",
+        "SecurityGroups": [
+          {
+            "Ref": "SecurityGroup"
+          }
+        ],
+        "Listeners": [
+          {
+            "InstancePort": "80",
+            "LoadBalancerPort": "80",
+            "Protocol": "HTTP",
+            "InstanceProtocol": "HTTP",
+            "PolicyNames": [
+              "AWSConsole-LBCookieStickinessPolicy-ELB"
+            ]
+          }
+        ],
+        "LBCookieStickinessPolicy": [
+          {
+            "PolicyName": "AWSConsole-LBCookieStickinessPolicy-ELB",
+            "CookieExpirationPeriod": "5"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ELB-WebServerFleet"
+          }
+        ]
+      }
+    },
+    "AutoScalingGroup": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "AvailabilityZones": {
+          "Fn::GetAZs": ""
+        },
+        "Cooldown": "300",
+        "DesiredCapacity": "3",
+        "HealthCheckGracePeriod": "120",
+        "HealthCheckType": "ELB",
+        "MaxSize": "3",
+        "MinSize": "3",
+        "VPCZoneIdentifier": [
+          {
+            "Fn::GetAtt": [
+              "VPCStack",
+              "Outputs.PublicSubnetA"
+            ]
+          },
+          {
+            "Fn::GetAtt": [
+              "VPCStack",
+              "Outputs.PublicSubnetB"
+            ]
+          },
+          {
+            "Fn::GetAtt": [
+              "VPCStack",
+              "Outputs.PublicSubnetC"
+            ]
+          }
+        ],
+        "LaunchConfigurationName": {
+          "Ref": "LaunchConfigurationWebServer"
+        },
+        "LoadBalancerNames": [
+          {
+            "Ref": "ElasticLoadBalancer"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ASG-WebServerFleet",
+            "PropagateAtLaunch": true
+          }
+        ],
+        "TerminationPolicies": [
+          "Default"
+        ]
+      }
+    },
+    "InstanceProfileWebServer": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "InstanceRoleWebServer"
+          }
+        ]
+      }
+    },
+    "InstanceRoleWebServer": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyName": "instance-policy",
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Sid": "S3AdminPolicy",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:*"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "LaunchConfigurationWebServer": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "DependsOn": "VPCStack",
+      "Properties": {
+        "AssociatePublicIpAddress": true,
+        "ImageId": {
+          "Fn::GetAtt": [
+            "BastionStack",
+            "Outputs.AMIID"
+          ]
+        },
+        "InstanceType": {
+          "Ref": "WebServerInstanceType"
+        },
+        "KeyName": {
+          "Ref": "WebServerKeyName"
+        },
+        "IamInstanceProfile": {
+          "Ref": "InstanceProfileWebServer"
+        },
+        "SecurityGroups": [
+          {
+            "Ref": "SecurityGroup"
+          }
+        ],
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/xvda",
+            "Ebs": {
+              "VolumeSize": 8
+            }
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+                "yum -y update\n",
+                "yum install -y httpd\n",
+                "aws s3 cp s3://",
+                {
+                  "Ref": "WebServerS3BucketName"
+                },
+                "/index.html /var/www/html/\n",
+                "aws s3 cp s3://",
+                {
+                  "Ref": "WebServerS3BucketName"
+                },
+                "/elbhealthcheck.html /var/www/html/\n",
+                "aws s3 cp s3://",
+                {
+                  "Ref": "WebServerS3BucketName"
+                },                
+                "/RLAM_SL_AWS-PictureA.jpg /var/www/html/\n",
+                "chown -R apache.apache /var/www/html/\n",
+                "chmod -R 755 /var/www/html/\n",
+                "chkconfig httpd on\n",
+                "service httpd start\n"
+              ]
+            ]
+          }
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "URL": {
+      "Description": "URL of the Web Server Fleet",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "http://",
+            {
+              "Fn::GetAtt": [
+                "ElasticLoadBalancer",
+                "DNSName"
+              ]
+            }
+          ]
+        ]
+      }
+    },
+    "Region": {
+      "Description": "AWS Region",
+      "Value": {
+        "Ref": "AWS::Region"
+      }
+    },
+    "BastionIPAddress": {
+      "Description": "IP Address of the Bastion host",
+      "Value": {
+        "Fn::GetAtt": [
+          "BastionStack",
+          "Outputs.BastionIPAddress"
+        ]
+      }
+    },
+    "AMIID": {
+      "Description": "The latest Amazon EC2 instance AMI ID",
+      "Value": {
+        "Fn::GetAtt": [
+          "BastionStack",
+          "Outputs.AMIID"
+        ]
+      }
+    },
+    "NATIPAddress": {
+      "Description": "IP Address of the NAT host",
+      "Value": {
+        "Fn::GetAtt": [
+          "NATStack",
+          "Outputs.NATIPAddress"
+        ]
+      }
+    },
+    "NATAMIID": {
+      "Description": "The latest Amazon EC2 instance NAT AMI ID",
+      "Value": {
+        "Fn::GetAtt": [
+          "NATStack",
+          "Outputs.NATAMIID"
+        ]
+      }
+    }
+  }
+}
