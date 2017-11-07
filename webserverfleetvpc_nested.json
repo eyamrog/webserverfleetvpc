@@ -326,7 +326,7 @@
               {
                 "Ref": "VPCS3BucketName"
               },
-              "/GenericVPC_Nested.json"
+              "/genericvpc_nested.json"
             ]
           ]
         }
@@ -348,7 +348,7 @@
               {
                 "Ref": "BastionS3BucketName"
               },
-              "/GenericBastion_Nested.json"
+              "/genericbastion_nested.json"
             ]
           ]
         },
@@ -396,7 +396,7 @@
               {
                 "Ref": "NATS3BucketName"
               },
-              "/GenericNAT_Nested.json"
+              "/genericnat_nested.json"
             ]
           ]
         },
@@ -702,7 +702,7 @@
                 {
                   "Ref": "WebServerS3BucketName"
                 },                
-                "/RLAM_SL_AWS-PictureA.jpg /var/www/html/\n",
+                "/rlam_sl_aws-pictured.jpg /var/www/html/\n",
                 "chown -R apache.apache /var/www/html/\n",
                 "chmod -R 755 /var/www/html/\n",
                 "chkconfig httpd on\n",
