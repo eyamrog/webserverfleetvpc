@@ -687,7 +687,7 @@
               [
                 "#!/bin/bash -xe\n",
                 "yum -y update\n",
-                "yum install -y httpd\n",
+                "yum -y install httpd24\n",
                 "aws s3 cp s3://",
                 {
                   "Ref": "WebServerS3BucketName"
@@ -703,8 +703,6 @@
                   "Ref": "WebServerS3BucketName"
                 },                
                 "/rlam_sl_aws-pictured.jpg /var/www/html/\n",
-                "chown -R apache.apache /var/www/html/\n",
-                "chmod -R 755 /var/www/html/\n",
                 "chkconfig httpd on\n",
                 "service httpd start\n"
               ]
