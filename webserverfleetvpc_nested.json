@@ -382,10 +382,7 @@
     },
     "NATStack": {
       "Type": "AWS::CloudFormation::Stack",
-      "DependsOn": [
-        "VPCStack",
-        "BastionStack"
-      ],
+      "DependsOn": "VPCStack",
       "Properties": {
         "TemplateURL": {
           "Fn::Join": [
@@ -442,9 +439,8 @@
     },
     "SecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
-      "DependsOn": "BastionStack",
       "Properties": {
-        "GroupDescription": "Enable SSH and HTTP access",
+        "GroupDescription": "Enable SSH, HTTP and HTTPS access",
         "SecurityGroupIngress": [
           {
             "IpProtocol": "tcp",
@@ -458,6 +454,12 @@
             "IpProtocol": "tcp",
             "FromPort": "80",
             "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "443",
+            "ToPort": "443",
             "CidrIp": "0.0.0.0/0"
           }
         ],
@@ -653,7 +655,10 @@
     },
     "LaunchConfigurationWebServer": {
       "Type": "AWS::AutoScaling::LaunchConfiguration",
-      "DependsOn": "VPCStack",
+      "DependsOn": [
+        "VPCStack",
+        "BastionStack"
+      ],
       "Properties": {
         "AssociatePublicIpAddress": true,
         "ImageId": {
