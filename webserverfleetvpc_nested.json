@@ -382,7 +382,10 @@
     },
     "NATStack": {
       "Type": "AWS::CloudFormation::Stack",
-      "DependsOn": "VPCStack",
+      "DependsOn": [
+        "VPCStack",
+        "BastionStack"
+      ],
       "Properties": {
         "TemplateURL": {
           "Fn::Join": [
@@ -439,6 +442,7 @@
     },
     "SecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
+      "DependsOn": "BastionStack",
       "Properties": {
         "GroupDescription": "Enable SSH and HTTP access",
         "SecurityGroupIngress": [
