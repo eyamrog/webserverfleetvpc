@@ -97,11 +97,11 @@
       "ConstraintDescription": "Must be the name of an existing EC2 KeyPair."
     },
     "WebServerSSHLocation": {
-      "Description": "The IP address range that can be used to SSH to the Bastion host",
+      "Description": "The IP address range that can be used to SSH to the Web Server",
       "Type": "String",
       "MinLength": "9",
       "MaxLength": "18",
-      "Default": "0.0.0.0/0",
+      "Default": "10.0.1.0/24",
       "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
       "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x."
     },
@@ -440,7 +440,7 @@
     "SecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
-        "GroupDescription": "Enable SSH and HTTP access",
+        "GroupDescription": "Enable SSH, HTTP and HTTPS access",
         "SecurityGroupIngress": [
           {
             "IpProtocol": "tcp",
@@ -454,6 +454,12 @@
             "IpProtocol": "tcp",
             "FromPort": "80",
             "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "443",
+            "ToPort": "443",
             "CidrIp": "0.0.0.0/0"
           }
         ],
@@ -649,7 +655,10 @@
     },
     "LaunchConfigurationWebServer": {
       "Type": "AWS::AutoScaling::LaunchConfiguration",
-      "DependsOn": "VPCStack",
+      "DependsOn": [
+        "VPCStack",
+        "BastionStack"
+      ],
       "Properties": {
         "AssociatePublicIpAddress": true,
         "ImageId": {
@@ -687,7 +696,7 @@
               [
                 "#!/bin/bash -xe\n",
                 "yum -y update\n",
-                "yum install -y httpd\n",
+                "yum -y install httpd24\n",
                 "aws s3 cp s3://",
                 {
                   "Ref": "WebServerS3BucketName"
@@ -703,8 +712,6 @@
                   "Ref": "WebServerS3BucketName"
                 },                
                 "/rlam_sl_aws-pictured.jpg /var/www/html/\n",
-                "chown -R apache.apache /var/www/html/\n",
-                "chmod -R 755 /var/www/html/\n",
                 "chkconfig httpd on\n",
                 "service httpd start\n"
               ]
